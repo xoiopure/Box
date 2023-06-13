@@ -564,7 +564,7 @@ class TestBox:
         widget_config = data.widget._Box__box_config()
         assert widget_config.pop("box_namespace") == ("widget",)
 
-        assert base_config == widget_config, "{} != {}".format(base_config, widget_config)
+        assert base_config == widget_config, f"{base_config} != {widget_config}"
 
     def test_functional_spaceballs(self):
         my_box = Box(movie_data)
@@ -1225,7 +1225,7 @@ class TestBox:
         a = Box(default_box=True)
         with pytest.raises(BoxKeyError):
             a._test_thing_
-        assert len(list(a.keys())) == 0
+        assert not list(a.keys())
 
         # Based on argparse.parse_args internal behavior, the following
         # creates the attribute in hasattr due to default_box=True, then
@@ -1364,6 +1364,7 @@ class TestBox:
         assert box2 == Box()
 
     def test_box_property_support(self):
+
         class BoxWithProperty(Box):
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
@@ -1391,7 +1392,7 @@ class TestBox:
         assert box.field == 5
         assert box._field == 5
         del box.field
-        assert not "_field" in box
+        assert "_field" not in box
 
     def test_box_namespace(self):
         bx = Box(default_box=True)

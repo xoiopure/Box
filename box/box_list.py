@@ -38,9 +38,7 @@ class BoxList(list):
 
     def __new__(cls, *args, **kwargs):
         obj = super().__new__(cls, *args, **kwargs)
-        # This is required for pickling to work correctly
-        obj.box_options = {"box_class": box.Box}
-        obj.box_options.update(kwargs)
+        obj.box_options = {"box_class": box.Box} | kwargs
         obj.box_org_ref = 0
         return obj
 
@@ -92,9 +90,10 @@ class BoxList(list):
         super().__setitem__(key, value)
 
     def _is_intact_type(self, obj):
-        if self.box_options.get("box_intact_types") and isinstance(obj, self.box_options["box_intact_types"]):
-            return True
-        return False
+        return bool(
+            self.box_options.get("box_intact_types")
+            and isinstance(obj, self.box_options["box_intact_types"])
+        )
 
     def _convert(self, p_object):
         if isinstance(p_object, dict) and not self._is_intact_type(p_object):
@@ -140,7 +139,7 @@ class BoxList(list):
         return str(self.to_list())
 
     def __copy__(self):
-        return self.__class__((x for x in self), **self.box_options)
+        return self.__class__(iter(self), **self.box_options)
 
     def __deepcopy__(self, memo=None):
         out = self.__class__()
@@ -188,12 +187,11 @@ class BoxList(list):
         :param json_kwargs: additional arguments to pass to json.dump(s)
         :return: string of JSON or return of `json.dump`
         """
-        if filename and multiline:
-            lines = [_to_json(item, filename=None, encoding=encoding, errors=errors, **json_kwargs) for item in self]
-            with open(filename, "w", encoding=encoding, errors=errors) as f:
-                f.write("\n".join(lines))
-        else:
+        if not filename or not multiline:
             return _to_json(self.to_list(), filename=filename, encoding=encoding, errors=errors, **json_kwargs)
+        lines = [_to_json(item, filename=None, encoding=encoding, errors=errors, **json_kwargs) for item in self]
+        with open(filename, "w", encoding=encoding, errors=errors) as f:
+            f.write("\n".join(lines))
 
     @classmethod
     def from_json(
@@ -217,11 +215,11 @@ class BoxList(list):
         :param kwargs: parameters to pass to `Box()` or `json.loads`
         :return: BoxList object from json data
         """
-        box_args = {}
-        for arg in list(kwargs.keys()):
-            if arg in BOX_PARAMETERS:
-                box_args[arg] = kwargs.pop(arg)
-
+        box_args = {
+            arg: kwargs.pop(arg)
+            for arg in list(kwargs.keys())
+            if arg in BOX_PARAMETERS
+        }
         data = _from_json(
             json_string, filename=filename, encoding=encoding, errors=errors, multiline=multiline, **kwargs
         )
@@ -278,11 +276,11 @@ class BoxList(list):
             :param kwargs: parameters to pass to `BoxList()` or `yaml.load`
             :return: BoxList object from yaml data
             """
-            box_args = {}
-            for arg in list(kwargs.keys()):
-                if arg in BOX_PARAMETERS:
-                    box_args[arg] = kwargs.pop(arg)
-
+            box_args = {
+                arg: kwargs.pop(arg)
+                for arg in list(kwargs.keys())
+                if arg in BOX_PARAMETERS
+            }
             data = _from_yaml(yaml_string=yaml_string, filename=filename, encoding=encoding, errors=errors, **kwargs)
             if not data:
                 return cls(**box_args)
@@ -369,11 +367,11 @@ class BoxList(list):
             :param kwargs: parameters to pass to `Box()`
             :return:
             """
-            box_args = {}
-            for arg in list(kwargs.keys()):
-                if arg in BOX_PARAMETERS:
-                    box_args[arg] = kwargs.pop(arg)
-
+            box_args = {
+                arg: kwargs.pop(arg)
+                for arg in list(kwargs.keys())
+                if arg in BOX_PARAMETERS
+            }
             data = _from_toml(toml_string=toml_string, filename=filename, encoding=encoding, errors=errors)
             if key_name not in data:
                 raise BoxError(f"{key_name} was not found.")
@@ -416,11 +414,11 @@ class BoxList(list):
             :param kwargs: parameters to pass to `Box()`
             :return:
             """
-            box_args = {}
-            for arg in list(kwargs.keys()):
-                if arg in BOX_PARAMETERS:
-                    box_args[arg] = kwargs.pop(arg)
-
+            box_args = {
+                arg: kwargs.pop(arg)
+                for arg in list(kwargs.keys())
+                if arg in BOX_PARAMETERS
+            }
             data = _from_msgpack(msgpack_bytes=msgpack_bytes, filename=filename, **kwargs)
             if not isinstance(data, list):
                 raise BoxError(f"msgpack data not returned as a list but rather a {type(data).__name__}")
