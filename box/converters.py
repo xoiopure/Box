@@ -186,19 +186,18 @@ def _to_yaml(
             else:
                 raise BoxError("No YAML Parser available, please install ruamel.yaml>0.17 or PyYAML")
 
+    elif ruamel_available:
+        yaml_dumper = YAML(typ=ruamel_typ)
+        yaml_dumper.default_flow_style = default_flow_style
+        for attr, value in ruamel_attrs.items():
+            setattr(yaml_dumper, attr, value)
+        with StringIO() as string_stream:
+            yaml_dumper.dump(obj, stream=string_stream, **yaml_kwargs)
+            return string_stream.getvalue()
+    elif pyyaml_available:
+        return yaml.dump(obj, default_flow_style=default_flow_style, **yaml_kwargs)
     else:
-        if ruamel_available:
-            yaml_dumper = YAML(typ=ruamel_typ)
-            yaml_dumper.default_flow_style = default_flow_style
-            for attr, value in ruamel_attrs.items():
-                setattr(yaml_dumper, attr, value)
-            with StringIO() as string_stream:
-                yaml_dumper.dump(obj, stream=string_stream, **yaml_kwargs)
-                return string_stream.getvalue()
-        elif pyyaml_available:
-            return yaml.dump(obj, default_flow_style=default_flow_style, **yaml_kwargs)
-        else:
-            raise BoxError("No YAML Parser available, please install ruamel.yaml>0.17 or PyYAML")
+        raise BoxError("No YAML Parser available, please install ruamel.yaml>0.17 or PyYAML")
 
 
 def _from_yaml(
@@ -339,8 +338,8 @@ def _from_csv(
     if csv_string:
         with StringIO(csv_string) as cs:
             reader = csv.DictReader(cs)
-            return [row for row in reader]
+            return list(reader)
     _exists(filename)  # type: ignore
     with open(filename, "r", encoding=encoding, errors=errors, newline="") as f:  # type: ignore
         reader = csv.DictReader(f, **kwargs)
-        return [row for row in reader]
+        return list(reader)

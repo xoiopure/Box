@@ -25,9 +25,7 @@ extended_test_dict = {
     "321CamelCase": 321,
     False: "tree",
     "tuples_galore": ({"item": 3}, ({"item": 4}, 5)),
-}
-extended_test_dict.update(test_dict)  # type: ignore
-
+} | test_dict
 data_json_file = os.path.join(test_root, "data", "json_file.json")
 data_yaml_file = os.path.join(test_root, "data", "yaml_file.yaml")
 tmp_json_file = os.path.join(test_root, "tmp", "tmp_json_file.json")
